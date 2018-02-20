@@ -41,7 +41,7 @@ type OrderResponse struct {
 //Submit submits the order to generate the certificate and returns the orderId
 func (c *DigicertClient) Submit(order *SubmitOrderInput, productNameID string) (*string, error) {
 
-	res, err := c.Request(order, "/order/certificate/"+productNameID, http.MethodPost, &OrderResponse{})
+	res, err := c.request(order, "/order/certificate/"+productNameID, http.MethodPost, &OrderResponse{})
 
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (c *DigicertClient) Submit(order *SubmitOrderInput, productNameID string) (
 //View returns certificateId and order status for an order
 func (c *DigicertClient) View(orderId string) (*string, *string, error) {
 
-	res, err := c.Request(nil, fmt.Sprintf("/order/certificate/%s", orderId), http.MethodGet, &CertificateOrderResponse{})
+	res, err := c.request(nil, fmt.Sprintf("/order/certificate/%s", orderId), http.MethodGet, &CertificateOrderResponse{})
 	if err != nil {
 		return nil, nil, err
 	}

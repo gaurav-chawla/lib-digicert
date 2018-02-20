@@ -52,7 +52,7 @@ func GenerateCSRAndKey(subject pkix.Name, hosts []string) (csr *x509.Certificate
 		return
 	}
 
-	csrPEM = String(string(csrBuf.Bytes()))
+	csrPEM = toString(string(csrBuf.Bytes()))
 	// convert the private key to PEM
 	privKeyPEM, err = getPrivateKeyPEM(priv)
 	return csr, csrPEM, privKeyPEM, err
@@ -67,5 +67,5 @@ func getPrivateKeyPEM(privKey *rsa.PrivateKey) (*string, error) {
 		return nil, err
 	}
 
-	return String(string(buf.Bytes())), nil
+	return toString(string(buf.Bytes())), nil
 }

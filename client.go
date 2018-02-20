@@ -129,7 +129,7 @@ func (c DigicertClient) call(r *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-func (c *DigicertClient) Request(requestPayload interface{}, apiPath, method string, response interface{}) (interface{}, error) {
+func (c *DigicertClient) request(requestPayload interface{}, apiPath, method string, response interface{}) (interface{}, error) {
 
 	var req []byte
 	var err error
@@ -171,7 +171,7 @@ func (c *DigicertClient) Request(requestPayload interface{}, apiPath, method str
 	return response, nil
 }
 
-func (c *DigicertClient) SimpleRequest(apiPath, method string, headers map[string]string) ([]byte, error) {
+func (c *DigicertClient) simpleRequest(apiPath, method string, headers map[string]string) ([]byte, error) {
 
 	r, err := http.NewRequest(method, c.baseUrl+apiPath, nil)
 	if err != nil {
@@ -193,13 +193,13 @@ func (c *DigicertClient) SimpleRequest(apiPath, method string, headers map[strin
 	return buf.Bytes(), nil
 }
 
-func StringValue(s *string) string {
+func stringValue(s *string) string {
 	if s != nil {
 		return *s
 	}
 	return ""
 }
 
-func String(s string) *string {
+func toString(s string) *string {
 	return &s
 }

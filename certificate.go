@@ -28,7 +28,7 @@ func (c *DigicertClient) Download(certificateId string) ([]byte, error) {
 		"Accept": "*/*",
 	}
 
-	res, err := c.SimpleRequest(fmt.Sprintf("/certificate/%s/download/format/default", certificateId), http.MethodGet, headers)
+	res, err := c.simpleRequest(fmt.Sprintf("/certificate/%s/download/format/default", certificateId), http.MethodGet, headers)
 
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (c *DigicertClient) Download(certificateId string) ([]byte, error) {
 //Revoke submits the revoke certificate request
 func (c *DigicertClient) Revoke(certificateId, comments string) (*RevokeCertificateResponse, error) {
 
-	res, err := c.Request(struct {
+	res, err := c.request(struct {
 		Comments string `json:"comments,omitempty"`
 	}{
 		Comments: comments,
