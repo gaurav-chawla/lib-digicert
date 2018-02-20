@@ -110,7 +110,7 @@ func (c DigicertClient) call(r *http.Request) (*http.Response, error) {
 		c.logger("api: %s response: %s status: %d", r.URL, dump, resp.StatusCode)
 	}
 
-	if resp.StatusCode >= 300 {
+	if resp.StatusCode >= 400 {
 		if resp.Body != nil {
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
