@@ -7,9 +7,13 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"time"
 )
 
 func TestClient_Submit(t *testing.T) {
+
+	domain := "testing.com"
+	commonName := "cn." + domain
 
 	token := os.Getenv("DIGICERT_API_TOKEN")
 	orgId := os.Getenv("DIGICERT_ORG_ID")
@@ -17,36 +21,37 @@ func TestClient_Submit(t *testing.T) {
 
 	c := NewDigicertClient(token)
 
-	c.WithDebug()
-
 	oId, err := strconv.ParseInt(orgId, 10, 64)
 
 	csr, csrPem, _, err := GenerateCSRAndKey(pkix.Name{
-		CommonName:         "commonName",
+		CommonName:         commonName,
 		Organization:       []string{"myOrg"},
 		Country:            []string{"US"},
 		Locality:           []string{"San Fransisco"},
 		OrganizationalUnit: []string{"Products"},
 		Province:           []string{"CA"},
 		StreetAddress:      []string{"123 Street 1"},
-	}, []string{"testing.com"})
+	}, []string{domain})
 
 	if err != nil {
 		t.Fatal("failed to generate csr", err)
 	}
 
+	today := time.Now()
+	customExp1Day := today.Add(time.Hour * 24 * 1)
+
 	order := &SubmitOrderInput{
-		Certificate: OrderCertificateInput{
+		Certificate: Certificate{
 			SignatureHash:     "sha512",
 			CommonName:        csr.Subject.CommonName,
 			Csr:               *csrPem,
 			OrganizationUnits: csr.Subject.OrganizationalUnit,
-			Emails:            []string{"test@test.com"},
 		},
 		Organization: Organization{
 			Id: oId,
 		},
-		ValidityYears: 1,
+		ValidityYears:        1,
+		CustomExpirationDate: customExp1Day.Format("2006-01-02"),
 	}
 
 	switch csr.SignatureAlgorithm {
@@ -58,36 +63,51 @@ func TestClient_Submit(t *testing.T) {
 		order.Certificate.SignatureHash = "sha256"
 	}
 
-	orderId, err := c.Submit(order, productNameId)
+	orderResp, err := c.Submit(order, productNameId)
 
 	if err != nil {
 		t.Fatal("failed to submit the order", err)
 	}
 
+	orderId := orderResp.Id
+
 	//time.Sleep(3 * time.Second)
 
-	certId, status, err := c.View(*orderId)
+	issued := false
+	var certId *string
+	var status *string
 
-	if err != nil {
-		t.Fatal(err)
+	for i := 0; i < 10; i++ {
+		certId, status, err = c.View(fmt.Sprint(orderId))
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		fmt.Println(*certId + "  " + *status)
+		if *status == "issued" {
+			issued = true
+			break
+		}
+		time.Sleep(12 * time.Second)
 	}
 
-	fmt.Println(*certId + "  " + *status)
-
-	if *status == "issued" {
+	if issued {
 		b, err := c.Download(*certId)
 		if err != nil {
 			t.Fatal("failed to download certificate", err)
 		}
 
 		fmt.Println(string(b))
-	}
 
-	out, err := c.Revoke(*certId, "Revoke it")
-	if err != nil {
-		t.Fatal("failed to revoke certificate", err)
-	}
+		out, err := c.Revoke(*certId, "Revoke it")
+		if err != nil {
+			t.Fatal("failed to revoke certificate", err)
+		}
 
-	fmt.Println(out.Status)
-	fmt.Println(out.Id)
+		fmt.Println(out.Status)
+		fmt.Println(out.Id)
+	} else {
+		fmt.Println("certificate status is not changed to issued. Status: ", *status)
+	}
 }
